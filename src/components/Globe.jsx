@@ -3,7 +3,7 @@ import * as THREE from 'three'
 import { generateLandPoints } from '../data/landmasses'
 
 const GLOBE_RADIUS = 2
-const AUTO_ROTATE_SPEED = 0.0009
+const AUTO_ROTATE_SPEED = 0.00000000000000000000000001
 const MIN_ZOOM = 3.2
 const MAX_ZOOM = 8
 const ARC_COLOR = 0xd64ee0
