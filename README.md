@@ -18,7 +18,7 @@ a paid, license-gated package (`@reactbits-starter/globe-tw`) that needs a
 ## Link
 https://loggrapp-dev.vercel.app
 
-## To run localy
+## To run locally
 
 ## 1. Install dependencies
 
