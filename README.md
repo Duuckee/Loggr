@@ -52,18 +52,6 @@ VITE_SUPABASE_ANON_KEY=your-anon-public-key
 npm run dev
 ```
 
-## 4. Push to GitHub / deploy on Vercel
-
-```bash
-git init
-git add .
-git commit -m "Initial commit"
-gh repo create loggr --source=. --public --push
-```
-
-Then import the repo at vercel.com → Add New Project. Vercel auto-detects
-Vite; `vercel.json` already handles SPA routing. Add the Supabase env vars
-under Project Settings → Environment Variables if/when you wire up storage.
 
 ## Project structure
 
@@ -84,10 +72,3 @@ src/
 ├── App.css                   # design tokens (black/amber palette)
 └── index.css
 ```
-
-## Next steps
-
-- Wire `Session`/`Contact` writes to a Supabase table so sessions persist
-  across refreshes and devices.
-- Swap `src/data/parks.js` for the real POTA park API/database.
-- Add the "Guided Mode" referenced in the design doc's session-setup mockup.
