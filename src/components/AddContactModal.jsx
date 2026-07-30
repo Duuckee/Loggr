@@ -51,6 +51,7 @@ export default function AddContactModal({ onClose, onSubmit }) {
   }
 
   return (
+    <div className="modal-backdrop">
       <div className="modal" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
           <div className="modal-title">Log a contact</div>
@@ -136,5 +137,6 @@ export default function AddContactModal({ onClose, onSubmit }) {
           Add to map
         </button>
       </div>
+    </div>
   )
 }
