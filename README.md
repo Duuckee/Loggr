@@ -35,18 +35,7 @@ next step is to persist `Session`/`Contact` (SRS 7.1–7.2) to a Supabase table.
 npm install
 ```
 
-## 2. Set up Supabase env vars (optional — not yet wired to data)
-
-```bash
-cp .env.example .env.local
-```
-
-```
-VITE_SUPABASE_URL=https://your-project-ref.supabase.co
-VITE_SUPABASE_ANON_KEY=your-anon-public-key
-```
-
-## 3. Run locally
+## 2. Run locally
 
 ```bash
 npm run dev
