@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import Globe from './Globe'
 
 function formatUtc(date) {
-  return date.toISOString().slice(11, 19).replace(/:/g, ':') + 'Z'
+  return date.toISOString().slice(11, 19).replace(/:/g, ':')
 }
 
 export default function Dashboard({ session, onAddContact, onEndSession }) {
