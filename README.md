@@ -15,19 +15,10 @@ P2P link arcs). It is **not** the React Bits Pro `Globe` component — that's
 a paid, license-gated package (`@reactbits-starter/globe-tw`) that needs a
 `REACTBITS_LICENSE_KEY` and isn't included here.
 
-## What's implemented
+## Link
+https://loggrapp-dev.vercel.app
 
-- **Session setup** (Screen 1) — home park reference, presets, operator/session name
-- **Dashboard** (Screen 2) — globe, legend, live stats, contact log
-- **Add contact modal** (Screen 3) — callsign/band/mode/location form, P2P toggle
-- **Session summary** (Screen 4) — full contact table, ADIF export
-- Local park lookup (`src/data/parks.js`) — a small stand-in for the full POTA
-  database mentioned in SRS 6.2; falls back gracefully if a reference isn't found
-- ADIF export (`src/lib/adif.js`) — downloads a `.adi` file of the session
-
-Contacts currently live in React state only (per session, lost on refresh).
-`src/lib/supabase.js` has a working Supabase client ready to go — the natural
-next step is to persist `Session`/`Contact` (SRS 7.1–7.2) to a Supabase table.
+## To run localy
 
 ## 1. Install dependencies
 
