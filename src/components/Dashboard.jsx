@@ -59,6 +59,9 @@ export default function Dashboard({ session, onAddContact, onEndSession }) {
               <span className="legend-dot" /> Contact
             </div>
             <div className="legend-item">
+              <span className="legend-line dim" /> Contact link
+            </div>
+            <div className="legend-item">
               <span className="legend-line" /> Park-to-park link
             </div>
             <div className="legend-item">
