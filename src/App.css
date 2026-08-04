@@ -277,6 +277,12 @@
   display: inline-block;
 }
 
+/* Matches the dimmer arc drawn for a non park-to-park contact */
+.legend-line.dim {
+  background: #8fa4c8;
+  opacity: 0.6;
+}
+
 .legend-ring {
   width: 8px;
   height: 8px;

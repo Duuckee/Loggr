@@ -1,20 +1,20 @@
 import { useEffect, useRef } from 'react'
 import * as THREE from 'three'
-import { generateLandPoints } from '../data/landmasses'
+import { generateLandDots } from '../data/landmasses'
 
 const GLOBE_RADIUS = 2
 const AUTO_ROTATE_SPEED = 0.00000000000000000000000001
 const MIN_ZOOM = 3.2
 const MAX_ZOOM = 8
 const ARC_COLOR = 0xd64ee0
+const LINK_COLOR = 0x8fa4c8
+const ARC_SEGMENTS = 64
+// Radius the contact dots and the ends of every link arc sit at.
+const MARKER_RADIUS = GLOBE_RADIUS * 1.02
 
-// Finest resolution the landmass dot field is generated at. Only a shuffled
-// prefix of these points is drawn at once (see LAND_MIN_REVEAL below), so
-// zooming in reveals more of the same field rather than the existing dots
-// just spreading apart — keeps the dot spacing feeling consistent.
-const LAND_STEP = 0.4
-const LAND_MIN_REVEAL = 0.02
-const LAND_REVEAL_EXPONENT = 3
+// How many candidate points are spread over the whole sphere to build the
+// dotted-earth texture; the ones that fall on land are kept (~29% of them).
+const LAND_SAMPLE_COUNT = 60000
 
 function latLonToVector3(lat, lon, radius) {
   const phi = (90 - lat) * (Math.PI / 180)
@@ -56,32 +56,40 @@ function makeGlowTexture() {
   return new THREE.CanvasTexture(canvas)
 }
 
-function buildLoopCurve(start, end, seed) {
-  const mid = start.clone().add(end).multiplyScalar(0.5)
-  const distance = start.distanceTo(end)
-  const bulge = GLOBE_RADIUS * (1.4 + seed * 1.6) + distance * 0.3
-  const axis = new THREE.Vector3().crossVectors(start, end).normalize()
-  if (axis.lengthSq() === 0) axis.set(0, 1, 0)
-  const tilt = new THREE.Vector3().crossVectors(mid.clone().normalize(), axis).normalize()
-  const apex = mid
-    .clone()
-    .normalize()
-    .multiplyScalar(bulge)
-    .add(tilt.multiplyScalar((seed - 0.5) * GLOBE_RADIUS * 0.9))
-  const quarter1 = start.clone().lerp(apex, 0.5).add(tilt.clone().multiplyScalar(seed * 0.6))
-  const quarter2 = end.clone().lerp(apex, 0.5).add(tilt.clone().multiplyScalar(-seed * 0.6))
-  return new THREE.CatmullRomCurve3([start, quarter1, apex, quarter2, end])
+// Great-circle arc from one point on the globe to another, lifted off the
+// surface so the link is readable without leaving the frame: short hops stay
+// low, long ones arch higher. The curve never dips inside the globe, so the
+// far half of a link is correctly hidden by the opaque core.
+// Returns null for two points at (effectively) the same place.
+function buildArcCurve(start, end) {
+  const startDir = start.clone().normalize()
+  const endDir = end.clone().normalize()
+  const angle = startDir.angleTo(endDir)
+  if (angle < 1e-4) return null
+
+  const startRadius = start.length()
+  const endRadius = end.length()
+  // Kept small on purpose: the globe already fills the frame at the default
+  // camera distance, so an arc that lifts much further than this gets cut off
+  // at the top of the view when it passes near the silhouette.
+  const lift = 0.05 + 0.12 * (angle / Math.PI)
+  const rotation = new THREE.Quaternion().setFromUnitVectors(startDir, endDir)
+
+  const points = []
+  for (let i = 0; i <= ARC_SEGMENTS; i++) {
+    const t = i / ARC_SEGMENTS
+    const step = new THREE.Quaternion().slerp(rotation, t)
+    const radius =
+      (startRadius + (endRadius - startRadius) * t) * (1 + lift * Math.sin(Math.PI * t))
+    points.push(startDir.clone().applyQuaternion(step).multiplyScalar(radius))
+  }
+  return new THREE.CatmullRomCurve3(points)
 }
 
-// Land points shuffled once at module load, so revealing a growing PREFIX
-// (via BufferGeometry.setDrawRange) gives an evenly-distributed sample at
-// any zoom level instead of filling in region by region.
-function buildShuffledLandPositions(step) {
-  const points = generateLandPoints(step)
-  for (let i = points.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1))
-    ;[points[i], points[j]] = [points[j], points[i]]
-  }
+// Evenly spaced land dots, built once when this module first loads and shared
+// across mounts.
+function buildLandPositions() {
+  const points = generateLandDots(LAND_SAMPLE_COUNT)
   const positions = new Float32Array(points.length * 3)
   points.forEach(([lon, lat], i) => {
     const v = latLonToVector3(lat, lon, GLOBE_RADIUS * 1.005)
@@ -91,8 +99,7 @@ function buildShuffledLandPositions(step) {
   })
   return positions
 }
-// Computed once when this module first loads, shared across mounts.
-const LAND_POSITIONS = buildShuffledLandPositions(LAND_STEP)
+const LAND_POSITIONS = buildLandPositions()
 
 export default function Globe({ homeLat, homeLon, contacts }) {
   const mountRef = useRef(null)
@@ -132,14 +139,12 @@ export default function Globe({ homeLat, homeLon, contacts }) {
     const coreMat = new THREE.MeshBasicMaterial({ color: 0x05070a })
     globeGroup.add(new THREE.Mesh(coreGeo, coreMat))
 
-    // Dotted landmass texture — draw range grows with zoom (set each frame)
+    // Dotted landmass texture — one evenly spaced field, drawn in full
     const dotTexture = makeDotTexture()
     const landGeo = new THREE.BufferGeometry()
     landGeo.setAttribute('position', new THREE.BufferAttribute(LAND_POSITIONS, 3))
-    const landCount = LAND_POSITIONS.length / 3
-    landGeo.setDrawRange(0, Math.max(1, Math.floor(landCount * LAND_MIN_REVEAL)))
     const landMat = new THREE.PointsMaterial({
-      size: 0.024,
+      size: 0.018,
       map: dotTexture,
       color: 0xd7dee8,
       transparent: true,
@@ -202,15 +207,6 @@ export default function Globe({ homeLat, homeLon, contacts }) {
       globeGroup.rotation.x = rotationX
       camera.position.z += (zoom - camera.position.z) * 0.08
 
-      // More of the landmass dot field reveals as the camera gets closer
-      const t = Math.min(
-        1,
-        Math.max(0, (MAX_ZOOM - camera.position.z) / (MAX_ZOOM - MIN_ZOOM))
-      )
-      const revealFraction =
-        LAND_MIN_REVEAL + (1 - LAND_MIN_REVEAL) * Math.pow(t, LAND_REVEAL_EXPONENT)
-      landGeo.setDrawRange(0, Math.max(1, Math.floor(landCount * revealFraction)))
-
       const t2 = performance.now() / 1000
       linksGroup.children.forEach((group) => {
         const { curve, comet, speed, phase } = group.userData
@@ -251,41 +247,48 @@ export default function Globe({ homeLat, homeLon, contacts }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [homeLat, homeLon])
 
-  // Contact markers + park-to-park traces. `contact.park` (set when the
-  // caller picked a real POTA park in the Add Contact form) is what its
-  // lat/lon came from — the park itself never renders as its own dot,
-  // only as the trace endpoint once a contact against it is logged.
+  // Contact markers + the link arc back to the home park. `contact.park` (set
+  // when the caller picked a real POTA park in the Add Contact form) is what
+  // its lat/lon came from — the park itself never renders as its own dot,
+  // only as the arc endpoint once a contact against it is logged. Every
+  // contact gets an arc; park-to-park ones are brighter and carry a comet.
   useEffect(() => {
     const { markersGroup, linksGroup } = stateRef.current
     if (!markersGroup) return
 
-    markersGroup.clear()
-    linksGroup.clear()
-
-    const homePos = latLonToVector3(homeLat, homeLon, GLOBE_RADIUS)
+    const homePos = latLonToVector3(homeLat, homeLon, MARKER_RADIUS)
     const dotGeo = new THREE.SphereGeometry(0.035, 10, 10)
     const dotMat = new THREE.MeshBasicMaterial({ color: 0xf5a623 })
     const cometGeo = new THREE.SphereGeometry(0.03, 8, 8)
+    // Everything built here is thrown away and rebuilt whenever the contact
+    // list changes, so it has to be disposed of rather than just detached.
+    const disposables = [dotGeo, dotMat, cometGeo]
 
     contacts.forEach((contact, i) => {
-      const point = latLonToVector3(contact.lat, contact.lon, GLOBE_RADIUS * 1.02)
+      const point = latLonToVector3(contact.lat, contact.lon, MARKER_RADIUS)
       const marker = new THREE.Mesh(dotGeo, dotMat)
       marker.position.copy(point)
       markersGroup.add(marker)
 
-      if (contact.isP2p) {
-        const seed = ((i * 37) % 100) / 100
-        const curve = buildLoopCurve(homePos, point, seed)
-        const tubeGeo = new THREE.TubeGeometry(curve, 96, 0.006, 6, false)
-        const tubeMat = new THREE.MeshBasicMaterial({
-          color: ARC_COLOR,
-          transparent: true,
-          opacity: 0.55,
-          blending: THREE.AdditiveBlending,
-          depthWrite: false,
-        })
-        const tube = new THREE.Mesh(tubeGeo, tubeMat)
+      // A contact logged at the home park itself has no arc to draw
+      const curve = buildArcCurve(homePos, point)
+      if (!curve) return
 
+      const seed = ((i * 37) % 100) / 100
+      const tubeGeo = new THREE.TubeGeometry(curve, 96, contact.isP2p ? 0.006 : 0.004, 6, false)
+      const tubeMat = new THREE.MeshBasicMaterial({
+        color: contact.isP2p ? ARC_COLOR : LINK_COLOR,
+        transparent: true,
+        opacity: contact.isP2p ? 0.55 : 0.28,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+      })
+      disposables.push(tubeGeo, tubeMat)
+
+      const group = new THREE.Group()
+      group.add(new THREE.Mesh(tubeGeo, tubeMat))
+
+      if (contact.isP2p) {
         const cometMat = new THREE.MeshBasicMaterial({
           color: 0xffe1ff,
           transparent: true,
@@ -293,14 +296,20 @@ export default function Globe({ homeLat, homeLon, contacts }) {
           blending: THREE.AdditiveBlending,
           depthWrite: false,
         })
+        disposables.push(cometMat)
         const comet = new THREE.Mesh(cometGeo, cometMat)
-
-        const group = new THREE.Group()
-        group.add(tube, comet)
+        group.add(comet)
         group.userData = { curve, comet, speed: 0.15 + seed * 0.1, phase: seed }
-        linksGroup.add(group)
       }
+
+      linksGroup.add(group)
     })
+
+    return () => {
+      markersGroup.clear()
+      linksGroup.clear()
+      disposables.forEach((item) => item.dispose())
+    }
   }, [contacts, homeLat, homeLon])
 
   return (
