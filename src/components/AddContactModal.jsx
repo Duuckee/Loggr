@@ -105,8 +105,9 @@ export default function AddContactModal({ contacts, initialContact, experienceMo
 
   return (
     <div className="modal-backdrop" onMouseDown={onClose}>
-      <section className="modal" role="dialog" aria-modal="true" aria-labelledby="contact-title" onMouseDown={(event) => event.stopPropagation()}>
-        <div className="modal-header"><div id="contact-title" className="modal-title">{initialContact ? 'Edit contact' : guided ? 'Guided contact' : 'Log a contact'}</div><button className="modal-close" onClick={onClose} aria-label="Close">×</button></div>
+      <section className={`modal contact-modal ${guided ? 'guided-modal' : ''}`} role="dialog" aria-modal="true" aria-labelledby="contact-title" onMouseDown={(event) => event.stopPropagation()}>
+        <div className="modal-header"><div><span className="panel-kicker">{initialContact ? 'Update QSO' : 'New QSO'}</span><div id="contact-title" className="modal-title">{initialContact ? 'Edit contact' : guided ? 'Guided contact entry' : 'Log a contact'}</div></div><button className="modal-close" onClick={onClose} aria-label="Close">×</button></div>
+        {guided && <div className="modal-progress" aria-label={`Step ${step + 1} of 3`}><span className={step >= 0 ? 'active' : ''}>Callsign</span><span className={step >= 1 ? 'active' : ''}>Signal</span><span className={step >= 2 ? 'active' : ''}>Location</span></div>}
         {(!guided || step === 0) && callsignFields}
         {(!guided || step === 1) && signalFields}
         {(!guided || step === 2) && locationFields}

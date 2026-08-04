@@ -1,44 +1,49 @@
 :root {
-  --bg: #0a0d12;
-  --panel: #10151d;
-  --panel-2: #151b25;
-  --border: #232b38;
-  --border-strong: #2f3948;
-  --accent: #f5a623;
-  --accent-dim: #7a5417;
-  --link: #d64ee0;
-  --text: #e7ecf3;
-  --text-dim: #8593a6;
-  --text-faint: #4d5866;
-  --mono: 'JetBrains Mono', 'SF Mono', ui-monospace, Menlo, monospace;
-  --sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --bg: #060908;
+  --bg-soft: #090e0d;
+  --panel: #0d1412;
+  --panel-raised: #111a17;
+  --panel-2: #15211d;
+  --border: #1c2a25;
+  --border-strong: #2b3d36;
+  --accent: #7bf2bd;
+  --accent-strong: #42d995;
+  --accent-soft: rgba(123, 242, 189, 0.09);
+  --warning: #ffd166;
+  --contact: #ff9f43;
+  --p2p: #48d8ff;
+  --danger: #ff737a;
+  --text: #eff8f4;
+  --text-dim: #9bafa7;
+  --text-faint: #60736b;
+  --mono: 'JetBrains Mono', 'SFMono-Regular', Consolas, 'Liberation Mono', monospace;
+  --sans: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --radius-sm: 8px;
+  --radius: 14px;
+  --radius-lg: 22px;
   color-scheme: dark;
 }
 
-* {
-  box-sizing: border-box;
-}
-
-html,
-body,
-#root {
-  height: 100%;
-}
-
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; background: var(--bg); }
+html, body, #root { min-height: 100%; }
 body {
   margin: 0;
   background: var(--bg);
   color: var(--text);
   font-family: var(--sans);
   -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
 
-button {
-  font-family: inherit;
-  cursor: pointer;
-}
+button, input, select, textarea { font: inherit; }
+button { cursor: pointer; }
+button:disabled { cursor: not-allowed; opacity: 0.55; }
+a { color: inherit; }
+::selection { color: #04100b; background: var(--accent); }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
 
-input,
-select {
-  font-family: var(--mono);
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
 }
