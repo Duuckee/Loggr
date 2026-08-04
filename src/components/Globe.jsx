@@ -5,7 +5,7 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 const GLOBE_RADIUS = 2
 const AUTO_ROTATE_SPEED = 0.00035
 const DRAG_ROTATE_SPEED = 0.0042
-const AUTO_ROTATE_RESUME_MS = 10000
+const AUTO_ROTATE_RESUME_MS = 1800
 const MIN_ZOOM = 2.42
 const MAX_ZOOM = 8.5
 const DOT_SPACING_PX = 7
@@ -520,7 +520,7 @@ export default function Globe({ homeLat, homeLon, contacts }) {
         height: '100%',
         cursor: 'grab',
         touchAction: 'none',
-        background: 'radial-gradient(circle at 50% 48%, rgba(34,25,58,0.48), transparent 66%)',
+        background: 'radial-gradient(circle at 50% 48%, rgba(32,108,96,0.16), transparent 66%)',
       }}
     />
   )

@@ -35,3 +35,13 @@ test('globe rotation uses the sphere centre instead of the zoom-shifted camera t
   assert.match(source, /globeGroup\.rotateOnWorldAxis\(worldUp,/)
   assert.doesNotMatch(source, /controls\.autoRotate = true/)
 })
+
+test('P2P contacts use a separate marker colour and a shallow great-circle link', async () => {
+  const source = await readFile(new URL('../src/components/Globe.jsx', import.meta.url), 'utf8')
+
+  assert.match(source, /P2P_MARKER_COLOR = 0x39d9ff/)
+  assert.match(source, /P2P_LINK_COLOR = 0x39d9ff/)
+  assert.match(source, /buildGreatCircleArc/)
+  assert.doesNotMatch(source, /buildLoopCurve/)
+  assert.doesNotMatch(source, /TubeGeometry/)
+})
