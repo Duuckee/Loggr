@@ -17,4 +17,8 @@ module.exports = {
       { allowConstantExport: true },
     ],
   },
+  overrides: [
+    { files: ['api/**/*.js', 'test/**/*.js'], env: { node: true, browser: false } },
+    { files: ['public/sw.js'], env: { serviceworker: true, browser: false } },
+  ],
 }
