@@ -5,8 +5,9 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 const GLOBE_RADIUS = 2
 const AUTO_ROTATE_SPEED = 0.00035
 const DRAG_ROTATE_SPEED = 0.0042
+const VERTICAL_DRAG_RATIO = 0.72
 const AUTO_ROTATE_RESUME_MS = 1800
-const MAX_GLOBE_TILT = THREE.MathUtils.degToRad(68)
+const MAX_GLOBE_PITCH = THREE.MathUtils.degToRad(75)
 const MIN_ZOOM = 2.42
 const MAX_ZOOM = 8.5
 const DOT_SPACING_PX = 7
@@ -37,6 +38,10 @@ function latLonToVector3(lat, lon, radius) {
     radius * Math.cos(phi),
     radius * Math.sin(phi) * Math.sin(theta)
   )
+}
+
+function wrapAngle(angle) {
+  return THREE.MathUtils.euclideanModulo(angle + Math.PI, Math.PI * 2) - Math.PI
 }
 
 function makeDotTexture() {
@@ -300,11 +305,18 @@ export default function Globe({ homeLat, homeLon, contacts }) {
     homeMarker.renderOrder = 2
     globeGroup.add(homeMarker)
 
-    // Keep rotation as yaw followed by pitch, with no roll component. Applying
-    // drag rotations on these two axes prevents repeated drags from gradually
-    // tilting the globe sideways or turning it upside down.
-    let globeTilt = -0.15
-    globeGroup.rotation.set(globeTilt, 0.4, 0, 'YXZ')
+    // Longitude and latitude are the only rotation state. Rebuilding the
+    // orientation from these values prevents quaternion/Euler drift, so the
+    // globe can never accumulate roll after repeated drags.
+    let globeYaw = 0.4
+    let globePitch = -0.15
+    globeGroup.rotation.order = 'YXZ'
+
+    function applyGlobeOrientation() {
+      globeGroup.rotation.set(globePitch, globeYaw, 0, 'YXZ')
+    }
+
+    applyGlobeOrientation()
 
     const controls = new OrbitControls(camera, renderer.domElement)
     controls.enableDamping = true
@@ -324,8 +336,10 @@ export default function Globe({ homeLat, homeLon, contacts }) {
     const activePointers = new Set()
     const worldUp = new THREE.Vector3(0, 1, 0)
     let dragPointerId = null
-    let lastPointerX = 0
-    let lastPointerY = 0
+    let dragStartX = 0
+    let dragStartY = 0
+    let dragStartYaw = globeYaw
+    let dragStartPitch = globePitch
     let lastInteractionAt = performance.now()
 
     function finishDrag(pointerId) {
@@ -346,30 +360,29 @@ export default function Globe({ homeLat, homeLon, contacts }) {
         return
       }
       dragPointerId = event.pointerId
-      lastPointerX = event.clientX
-      lastPointerY = event.clientY
+      dragStartX = event.clientX
+      dragStartY = event.clientY
+      dragStartYaw = globeYaw
+      dragStartPitch = globePitch
       renderer.domElement.setPointerCapture?.(event.pointerId)
       renderer.domElement.style.cursor = 'grabbing'
     }
 
     function onPointerMove(event) {
       if (event.pointerId !== dragPointerId || activePointers.size !== 1) return
-      const deltaX = event.clientX - lastPointerX
-      const deltaY = event.clientY - lastPointerY
-      lastPointerX = event.clientX
-      lastPointerY = event.clientY
+      const deltaX = event.clientX - dragStartX
+      const deltaY = event.clientY - dragStartY
 
-      // Horizontal drag remains unrestricted around the true world-up axis.
-      // Vertical drag uses the globe's local X axis and is capped before the
-      // poles can pass over the top, so no roll or inversion can accumulate.
-      globeGroup.rotateOnWorldAxis(worldUp, deltaX * DRAG_ROTATE_SPEED)
-      const nextTilt = THREE.MathUtils.clamp(
-        globeTilt + deltaY * DRAG_ROTATE_SPEED,
-        -MAX_GLOBE_TILT,
-        MAX_GLOBE_TILT
+      // Horizontal movement follows the pointer freely. Vertical movement is
+      // slightly gentler and has a firm latitude limit, keeping north upright
+      // without making ordinary dragging feel locked down.
+      globeYaw = wrapAngle(dragStartYaw + deltaX * DRAG_ROTATE_SPEED)
+      globePitch = THREE.MathUtils.clamp(
+        dragStartPitch + deltaY * DRAG_ROTATE_SPEED * VERTICAL_DRAG_RATIO,
+        -MAX_GLOBE_PITCH,
+        MAX_GLOBE_PITCH
       )
-      globeGroup.rotateX(nextTilt - globeTilt)
-      globeTilt = nextTilt
+      applyGlobeOrientation()
       lastInteractionAt = performance.now()
     }
 
@@ -400,7 +413,9 @@ export default function Globe({ homeLat, homeLon, contacts }) {
       updateLandLod(landLayers, camera, mount.clientHeight, loadLandLayer)
 
       if (dragPointerId === null && frameAt - lastInteractionAt > AUTO_ROTATE_RESUME_MS) {
-        globeGroup.rotateOnWorldAxis(worldUp, AUTO_ROTATE_SPEED * elapsedFrames)
+        const autoRotation = AUTO_ROTATE_SPEED * elapsedFrames
+        globeGroup.rotateOnWorldAxis(worldUp, autoRotation)
+        globeYaw = wrapAngle(globeYaw + autoRotation)
       }
 
       const now = frameAt / 1000
