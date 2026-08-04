@@ -4,8 +4,8 @@ import { generateLandPoints } from '../data/landmasses'
 
 const GLOBE_RADIUS = 2
 const AUTO_ROTATE_SPEED = 0.00000000000000000000000001
-const MIN_ZOOM = 1
-const MAX_ZOOM = 10
+const MIN_ZOOM = 3.2
+const MAX_ZOOM = 8
 const ARC_COLOR = 0xd64ee0
 
 // Finest resolution the landmass dot field is generated at. Only a shuffled
