@@ -6,6 +6,7 @@ const GLOBE_RADIUS = 2
 const AUTO_ROTATE_SPEED = 0.00035
 const DRAG_ROTATE_SPEED = 0.0042
 const AUTO_ROTATE_RESUME_MS = 1800
+const MAX_GLOBE_TILT = THREE.MathUtils.degToRad(68)
 const MIN_ZOOM = 2.42
 const MAX_ZOOM = 8.5
 const DOT_SPACING_PX = 7
@@ -299,7 +300,11 @@ export default function Globe({ homeLat, homeLon, contacts }) {
     homeMarker.renderOrder = 2
     globeGroup.add(homeMarker)
 
-    globeGroup.rotation.set(-0.15, 0.4, 0)
+    // Keep rotation as yaw followed by pitch, with no roll component. Applying
+    // drag rotations on these two axes prevents repeated drags from gradually
+    // tilting the globe sideways or turning it upside down.
+    let globeTilt = -0.15
+    globeGroup.rotation.set(globeTilt, 0.4, 0, 'YXZ')
 
     const controls = new OrbitControls(camera, renderer.domElement)
     controls.enableDamping = true
@@ -318,7 +323,6 @@ export default function Globe({ homeLat, homeLon, contacts }) {
 
     const activePointers = new Set()
     const worldUp = new THREE.Vector3(0, 1, 0)
-    const cameraRight = new THREE.Vector3()
     let dragPointerId = null
     let lastPointerX = 0
     let lastPointerY = 0
@@ -355,9 +359,17 @@ export default function Globe({ homeLat, homeLon, contacts }) {
       lastPointerX = event.clientX
       lastPointerY = event.clientY
 
+      // Horizontal drag remains unrestricted around the true world-up axis.
+      // Vertical drag uses the globe's local X axis and is capped before the
+      // poles can pass over the top, so no roll or inversion can accumulate.
       globeGroup.rotateOnWorldAxis(worldUp, deltaX * DRAG_ROTATE_SPEED)
-      cameraRight.set(1, 0, 0).applyQuaternion(camera.quaternion).normalize()
-      globeGroup.rotateOnWorldAxis(cameraRight, deltaY * DRAG_ROTATE_SPEED)
+      const nextTilt = THREE.MathUtils.clamp(
+        globeTilt + deltaY * DRAG_ROTATE_SPEED,
+        -MAX_GLOBE_TILT,
+        MAX_GLOBE_TILT
+      )
+      globeGroup.rotateX(nextTilt - globeTilt)
+      globeTilt = nextTilt
       lastInteractionAt = performance.now()
     }
 
