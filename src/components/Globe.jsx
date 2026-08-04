@@ -5,18 +5,13 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 const GLOBE_RADIUS = 2
 const AUTO_ROTATE_SPEED = 0.00035
 const DRAG_ROTATE_SPEED = 0.0042
-const AUTO_ROTATE_RESUME_MS = 10000
+const AUTO_ROTATE_RESUME_MS = 1800
 const MIN_ZOOM = 2.42
 const MAX_ZOOM = 8.5
+const ARC_COLOR = 0xd64ee0
 const DOT_SPACING_PX = 7
 const HOME_MARKER_COLOR = 0xffcf33
-const HOME_MARKER_SIZE_PX = 8
-const CONTACT_MARKER_COLOR = 0xf5a623
-const CONTACT_MARKER_SIZE_PX = 5
-const P2P_MARKER_COLOR = 0x39d9ff
-const P2P_MARKER_SIZE_PX = 7
-const P2P_LINK_COLOR = 0x39d9ff
-const P2P_LINK_SEGMENTS = 96
+const HOME_MARKER_SIZE_PX = 6
 const LAND_LOD_ASSETS = [
   { spacing: 1.5, file: 'land-15.bin' },
   { spacing: 1, file: 'land-1.bin' },
@@ -55,42 +50,21 @@ function makeDotTexture() {
   return texture
 }
 
-function buildGreatCircleArc(start, end) {
-  const startDirection = start.clone().normalize()
-  const endDirection = end.clone().normalize()
-  const angle = startDirection.angleTo(endDirection)
-
-  if (angle < 0.00001) return [start.clone(), end.clone()]
-
-  const axis = new THREE.Vector3().crossVectors(startDirection, endDirection)
-  if (axis.lengthSq() < 0.000001) {
-    axis.crossVectors(startDirection, new THREE.Vector3(0, 1, 0))
-    if (axis.lengthSq() < 0.000001) axis.crossVectors(startDirection, new THREE.Vector3(1, 0, 0))
-  }
-  axis.normalize()
-
-  // Keep the route close to the globe. Longer contacts lift a little higher,
-  // but never turn into the oversized beam used by the old P2P curve.
-  const lift = THREE.MathUtils.clamp(angle * 0.12, 0.045, 0.24)
-  return Array.from({ length: P2P_LINK_SEGMENTS + 1 }, (_, index) => {
-    const progress = index / P2P_LINK_SEGMENTS
-    const radius = GLOBE_RADIUS * 1.018 + Math.sin(Math.PI * progress) * lift
-    return startDirection
-      .clone()
-      .applyAxisAngle(axis, angle * progress)
-      .multiplyScalar(radius)
-  })
-}
-
-function disposeGroupChildren(group) {
-  group.children.forEach((child) => {
-    child.traverse((object) => {
-      object.geometry?.dispose()
-      if (Array.isArray(object.material)) object.material.forEach((material) => material.dispose())
-      else object.material?.dispose()
-    })
-  })
-  group.clear()
+function buildLoopCurve(start, end, seed) {
+  const mid = start.clone().add(end).multiplyScalar(0.5)
+  const distance = start.distanceTo(end)
+  const bulge = GLOBE_RADIUS * (1.4 + seed * 1.6) + distance * 0.3
+  const axis = new THREE.Vector3().crossVectors(start, end).normalize()
+  if (axis.lengthSq() === 0) axis.set(0, 1, 0)
+  const tilt = new THREE.Vector3().crossVectors(mid.clone().normalize(), axis).normalize()
+  const apex = mid
+    .clone()
+    .normalize()
+    .multiplyScalar(bulge)
+    .add(tilt.multiplyScalar((seed - 0.5) * GLOBE_RADIUS * 0.9))
+  const quarter1 = start.clone().lerp(apex, 0.5).add(tilt.clone().multiplyScalar(seed * 0.6))
+  const quarter2 = end.clone().lerp(apex, 0.5).add(tilt.clone().multiplyScalar(-seed * 0.6))
+  return new THREE.CatmullRomCurve3([start, quarter1, apex, quarter2, end])
 }
 
 async function loadFloat32Asset(file) {
@@ -393,11 +367,11 @@ export default function Globe({ homeLat, homeLon, contacts }) {
 
       const now = frameAt / 1000
       linksGroup.children.forEach((group) => {
-        const { curve, pulse, speed, phase } = group.userData
+        const { curve, comet, speed, phase } = group.userData
         if (!curve) return
         const progress = (now * speed + phase) % 1
-        pulse.position.copy(curve.getPointAt(progress))
-        pulse.material.opacity = 0.75 * Math.sin(progress * Math.PI) + 0.15
+        comet.position.copy(curve.getPointAt(progress))
+        comet.material.opacity = 0.9 * Math.sin(progress * Math.PI) + 0.1
       })
 
       renderer.render(scene, camera)
@@ -415,7 +389,7 @@ export default function Globe({ homeLat, homeLon, contacts }) {
     const resizeObserver = new ResizeObserver(onResize)
     resizeObserver.observe(mount)
 
-    stateRef.current = { markersGroup, linksGroup, dotTexture }
+    stateRef.current = { markersGroup, linksGroup }
 
     return () => {
       disposed = true
@@ -439,77 +413,52 @@ export default function Globe({ homeLat, homeLon, contacts }) {
   }, [homeLat, homeLon])
 
   useEffect(() => {
-    const { markersGroup, linksGroup, dotTexture } = stateRef.current
-    if (!markersGroup || !dotTexture) return
+    const { markersGroup, linksGroup } = stateRef.current
+    if (!markersGroup) return
 
-    disposeGroupChildren(markersGroup)
-    disposeGroupChildren(linksGroup)
+    markersGroup.clear()
+    linksGroup.clear()
 
-    const homePos = latLonToVector3(homeLat, homeLon, GLOBE_RADIUS * 1.018)
-    const contactPositions = []
-    const p2pPositions = []
+    const homePos = latLonToVector3(homeLat, homeLon, GLOBE_RADIUS)
+    const dotGeo = new THREE.SphereGeometry(0.035, 10, 10)
+    const dotMat = new THREE.MeshBasicMaterial({ color: 0xf5a623 })
+    const cometGeo = new THREE.SphereGeometry(0.03, 8, 8)
 
     contacts.forEach((contact, index) => {
       if (!Number.isFinite(Number(contact.lat)) || !Number.isFinite(Number(contact.lon)) || contact.lat === '' || contact.lon === '') return
-      const point = latLonToVector3(Number(contact.lat), Number(contact.lon), GLOBE_RADIUS * 1.018)
-      if (contact.isP2p) p2pPositions.push(point)
-      else contactPositions.push(point)
+      const point = latLonToVector3(contact.lat, contact.lon, GLOBE_RADIUS * 1.02)
+      const marker = new THREE.Mesh(dotGeo, dotMat)
+      marker.position.copy(point)
+      markersGroup.add(marker)
 
       if (contact.isP2p) {
         const seed = ((index * 37) % 100) / 100
-        const arcPoints = buildGreatCircleArc(homePos, point)
-        const curve = new THREE.CatmullRomCurve3(arcPoints)
-        const lineGeo = new THREE.BufferGeometry().setFromPoints(arcPoints)
-        const lineMat = new THREE.LineBasicMaterial({
-          color: P2P_LINK_COLOR,
+        const curve = buildLoopCurve(homePos, point, seed)
+        const tubeGeo = new THREE.TubeGeometry(curve, 96, 0.006, 6, false)
+        const tubeMat = new THREE.MeshBasicMaterial({
+          color: ARC_COLOR,
           transparent: true,
-          opacity: 0.7,
+          opacity: 0.55,
           blending: THREE.AdditiveBlending,
           depthWrite: false,
         })
-        const line = new THREE.Line(lineGeo, lineMat)
+        const tube = new THREE.Mesh(tubeGeo, tubeMat)
 
-        const pulseGeo = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3()])
-        const pulseMat = new THREE.PointsMaterial({
-          size: 4,
-          map: dotTexture,
-          color: 0xc5f6ff,
+        const cometMat = new THREE.MeshBasicMaterial({
+          color: 0xffe1ff,
           transparent: true,
           opacity: 1,
-          alphaTest: 0.04,
           blending: THREE.AdditiveBlending,
           depthWrite: false,
-          sizeAttenuation: false,
         })
-        const pulse = new THREE.Points(pulseGeo, pulseMat)
+        const comet = new THREE.Mesh(cometGeo, cometMat)
 
         const group = new THREE.Group()
-        group.add(line, pulse)
-        group.userData = { curve, pulse, speed: 0.12 + seed * 0.05, phase: seed }
+        group.add(tube, comet)
+        group.userData = { curve, comet, speed: 0.15 + seed * 0.1, phase: seed }
         linksGroup.add(group)
       }
     })
-
-    function addMarkerLayer(positions, color, size) {
-      if (positions.length === 0) return
-      const geometry = new THREE.BufferGeometry().setFromPoints(positions)
-      const material = new THREE.PointsMaterial({
-        size,
-        map: dotTexture,
-        color,
-        transparent: true,
-        opacity: 1,
-        alphaTest: 0.04,
-        depthWrite: false,
-        sizeAttenuation: false,
-      })
-      const markers = new THREE.Points(geometry, material)
-      markers.renderOrder = 3
-      markersGroup.add(markers)
-    }
-
-    addMarkerLayer(contactPositions, CONTACT_MARKER_COLOR, CONTACT_MARKER_SIZE_PX)
-    addMarkerLayer(p2pPositions, P2P_MARKER_COLOR, P2P_MARKER_SIZE_PX)
   }, [contacts, homeLat, homeLon])
 
   return (

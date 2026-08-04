@@ -85,10 +85,9 @@ export default function Dashboard({
 
         <aside className="sidebar">
           <div className="legend">
-            <div className="legend-item"><span className="legend-dot contact" /> Contact</div>
-            <div className="legend-item"><span className="legend-dot p2p" /> P2P contact</div>
-            <div className="legend-item"><span className="legend-line" /> P2P link</div>
-            <div className="legend-item"><span className="legend-dot home" /> Your park</div>
+            <div className="legend-item"><span className="legend-dot" /> Contact</div>
+            <div className="legend-item"><span className="legend-line" /> Park-to-park link</div>
+            <div className="legend-item"><span className="legend-ring" /> Home park</div>
           </div>
 
           <div className="stats-grid">

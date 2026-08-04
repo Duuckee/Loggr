@@ -341,18 +341,22 @@
   width: 8px;
   height: 8px;
   border-radius: 50%;
+  background: var(--accent);
   display: inline-block;
 }
 
-.legend-dot.contact { background: #f5a623; }
-.legend-dot.p2p { background: #39d9ff; box-shadow: 0 0 7px rgba(57, 217, 255, 0.75); }
-.legend-dot.home { width: 10px; height: 10px; background: #ffcf33; box-shadow: 0 0 7px rgba(255, 207, 51, 0.7); }
-
 .legend-line {
   width: 14px;
-  height: 1px;
-  background: #39d9ff;
-  box-shadow: 0 0 5px rgba(57, 217, 255, 0.65);
+  height: 2px;
+  background: var(--link);
+  display: inline-block;
+}
+
+.legend-ring {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  border: 2px solid var(--accent);
   display: inline-block;
 }
 
