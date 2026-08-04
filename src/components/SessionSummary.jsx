@@ -1,11 +1,12 @@
 import { useMemo } from 'react'
+import AppNavigation from './AppNavigation'
 import { downloadAdif } from '../lib/adif'
 
 function countBy(items, key) {
   return items.reduce((counts, item) => ({ ...counts, [item[key] || 'Unassigned']: (counts[item[key] || 'Unassigned'] || 0) + 1 }), {})
 }
 
-export default function SessionSummary({ session, onNewSession }) {
+export default function SessionSummary({ session, profile, onNewSession, onNavigate, onSignOut }) {
   const report = useMemo(() => ({
     total: session.contacts.length,
     uniqueCallsigns: new Set(session.contacts.map((contact) => contact.callsign)).size,
@@ -16,9 +17,10 @@ export default function SessionSummary({ session, onNewSession }) {
 
   return (
     <main className="summary-screen">
+      <AppNavigation profile={profile} active="setup" onNavigate={onNavigate} onSignOut={onSignOut} compact />
       <div className="summary-inner">
         <header className="summary-header">
-          <div className="app-header-brand"><span className="wordmark-mark" aria-hidden="true">L</span><span>LOGGR</span></div>
+          <div><span className="panel-kicker">Session report</span><strong>Saved to @{profile.username}</strong></div>
           <button className="btn-ghost" onClick={onNewSession}>＋ New session</button>
         </header>
 

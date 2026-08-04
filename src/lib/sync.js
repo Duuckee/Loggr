@@ -5,12 +5,8 @@ export async function syncSession(session) {
     return { status: 'local', message: 'Saved on this device' }
   }
 
-  let { data: authData } = await supabase.auth.getSession()
-  if (!authData.session) {
-    const { data, error } = await supabase.auth.signInAnonymously()
-    if (error) throw error
-    authData = { session: data.session }
-  }
+  const { data: authData } = await supabase.auth.getSession()
+  if (!authData.session) return { status: 'local', message: 'Sign in to sync' }
   const ownerId = authData.session.user.id
 
   const sessionRow = {

@@ -14,6 +14,7 @@ function formatDuration(start, end) {
 
 export default function Dashboard({
   session,
+  profile,
   online,
   syncState,
   duplicateCooldownMinutes,
@@ -23,6 +24,8 @@ export default function Dashboard({
   onDeleteContact,
   onUpdateSession,
   onEndSession,
+  onNavigate,
+  onSignOut,
 }) {
   const [now, setNow] = useState(new Date())
 
@@ -44,10 +47,10 @@ export default function Dashboard({
   return (
     <div className="dashboard">
       <header className="app-header">
-        <div className="app-header-brand">
+        <button className="app-header-brand wordmark-button" type="button" onClick={() => onNavigate('setup')}>
           <span className="wordmark-mark" aria-hidden="true">L</span>
           <span>LOGGR</span>
-        </div>
+        </button>
         <div className="session-identity">
           <span className="session-overline"><span className="status-pulse" /> Live session · {formatDuration(session.startTime, now)}</span>
           <h1>{session.sessionName || session.homePark}</h1>
@@ -59,6 +62,11 @@ export default function Dashboard({
             <span>{online ? 'Online' : 'Offline'}<small>{formatUtc(now)}Z</small></span>
           </div>
           <button className="btn-ghost" onClick={onEndSession}>End session</button>
+          <div className="header-account-menu">
+            <button type="button" onClick={() => onNavigate('leaderboard')}>Leaderboard</button>
+            <button type="button" onClick={() => onNavigate('profile')}>@{profile.username}</button>
+            <button type="button" onClick={onSignOut}>Sign out</button>
+          </div>
           <button className="btn-accent" onClick={onAddContact}><span aria-hidden="true">＋</span> Log contact</button>
         </div>
       </header>

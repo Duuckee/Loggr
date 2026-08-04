@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { archiveSession, clearActiveSession, loadActiveSession, loadArchivedSessions, loadSettings, saveActiveSession, saveSettings } from '../src/lib/storage.js'
+import { archiveSession, claimLegacyStorage, clearActiveSession, loadActiveSession, loadArchivedSessions, loadSettings, saveActiveSession, saveSettings } from '../src/lib/storage.js'
 
 function installStorage() {
   const values = new Map()
@@ -29,3 +29,25 @@ test('archives sessions and persists duplicate settings', () => {
   assert.equal(loadSettings().duplicateCooldownMinutes, 30)
 })
 
+test('keeps active sessions and archives separate for each account', () => {
+  installStorage()
+  saveActiveSession({ id: 'a', ownerId: 'user-a' }, 'user-a')
+  saveActiveSession({ id: 'b', ownerId: 'user-b' }, 'user-b')
+  archiveSession({ id: 'archive-a', ownerId: 'user-a', contacts: [] }, 'user-a')
+  assert.equal(loadActiveSession('user-a').id, 'a')
+  assert.equal(loadActiveSession('user-b').id, 'b')
+  assert.equal(loadArchivedSessions('user-a')[0].id, 'archive-a')
+  assert.deepEqual(loadArchivedSessions('user-b'), [])
+})
+
+test('claims legacy device data into the first signed-in account', () => {
+  installStorage()
+  global.localStorage.setItem('loggr.active-session.v2', JSON.stringify({ id: 'legacy-session', contacts: [] }))
+  global.localStorage.setItem('loggr.archived-sessions.v2', JSON.stringify([{ id: 'legacy-archive', contacts: [] }]))
+  const claimed = claimLegacyStorage('new-owner')
+  assert.equal(claimed.ownerId, 'new-owner')
+  assert.notEqual(claimed.id, 'legacy-session')
+  assert.notEqual(loadArchivedSessions('new-owner')[0].id, 'legacy-archive')
+  assert.equal(loadArchivedSessions('new-owner')[0].ownerId, 'new-owner')
+  assert.equal(global.localStorage.getItem('loggr.active-session.v2'), null)
+})

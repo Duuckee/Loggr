@@ -15,6 +15,10 @@ Loggr is an offline-ready amateur-radio field contact logger for POTA activators
 - POTA park validation from the bundled Australian park dataset
 - 3D contact map, P2P arcs, live statistics, session reports, and ADIF 3.1.4 export
 - Natural Earth country geometry with screen-space-consistent dotted globe detail
+- Username/password accounts backed by Supabase Auth (passwords never enter Loggr tables)
+- Public user and linked Scout user profiles, groups, local-admin membership controls, and a protected leaderboard-admin role
+- Public all-time/month/week leaderboard ranked by synced QSO count, with a per-profile privacy toggle
+- Account-scoped offline sessions and archives, including one-time migration of older local logs
 
 ## Run locally
 
@@ -33,14 +37,20 @@ npm run build
 
 The globe geometry is already included. If its Natural Earth source or detail levels are changed, regenerate the binary assets with `npm run generate:globe`.
 
-## Optional external services
+## Account and service setup
 
-Copy `.env.example` to `.env.local`. The app works without these values and keeps contacts locally.
+Copy `.env.example` to `.env.local`.
 
-- Set `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY`, apply `supabase/schema.sql`, and enable anonymous sign-ins in Supabase Auth to enable private cloud sync. The schema includes owner-scoped Row Level Security policies.
+- Accounts, groups, leaderboards and cloud sync require `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY`.
+- Run the complete `supabase/schema.sql` in Supabase SQL Editor.
+- In **Authentication → Providers → Email**, keep Email enabled and turn **Confirm email off**. Loggr converts the username into an internal Auth identifier; no real email is requested or stored.
+- Create your own account in Loggr, then grant the first protected leaderboard-admin role in SQL Editor: `update public.profiles set system_role = 'leaderboard_admin' where username = 'your_username';`
+- Use only a publishable/anon key in `VITE_SUPABASE_ANON_KEY`. Never put a `service_role` or secret key in a browser variable.
 - Set either `QRZ_USERNAME`/`QRZ_PASSWORD` or `HAMQTH_USERNAME`/`HAMQTH_PASSWORD` in Vercel to enable `/api/callsign`. Credentials are used only by the serverless function and are never bundled into the browser.
 
-Youth users should be represented with callsigns or non-identifying aliases. The application does not require names, dates of birth, email addresses, or other youth-identifying data.
+After a first successful sign-in, cached account details and account-scoped QSO storage remain available offline. Live sign-in, registration, group changes and leaderboard refreshes require a connection.
+
+Youth users should be represented with usernames, callsigns or non-identifying aliases. The application does not require names, dates of birth, email addresses, or other youth-identifying data.
 
 ## Project evidence
 

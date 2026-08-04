@@ -20,6 +20,8 @@ Run `npm test`, `npm run lint`, and `npm run build`. Record the command output o
 | A10 | End session and export ADIF | Summary totals are correct and `.adi` downloads | ADIF structure covered by automated test; download pending | Partial |
 | A11 | Re-enter same callsign/band/mode inside selected cooldown | Duplicate warning appears; cancel or save-anyway works | Duplicate logic covered by unit test; UI pending | Partial |
 | A12 | Use at 390px and 1024px viewport widths | Controls remain readable without clipped content | To be recorded by student | Pending |
+| A13 | Create two username accounts, sign out/in between them | Each account restores only its own active/archive data | Storage isolation covered automatically; browser flow pending | Partial |
+| A14 | Create a group and join from a second account with its code | Creator becomes local admin; second account becomes linked Scout user | Schema role coverage; browser flow pending | Partial |
+| A15 | Sync different QSO totals from two opted-in accounts | Leaderboard orders users by QSO total; privacy toggle removes a user | RPC/schema coverage; live Supabase test pending | Partial |
 
 Keep breakpoint screenshots, browser console evidence, and corrected before/after results as Criterion 8 evidence. Do not mark pending scenarios as passed until they have actually been run.
-
