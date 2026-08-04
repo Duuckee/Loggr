@@ -5,9 +5,11 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 const GLOBE_RADIUS = 2
 const AUTO_ROTATE_SPEED = 0.00035
 const DRAG_ROTATE_SPEED = 0.0042
-const VERTICAL_DRAG_RATIO = 0.72
+const VERTICAL_DRAG_RATIO = 0.2
+const VERTICAL_INTENT_RATIO = 0.72
+const VERTICAL_DEAD_ZONE_PX = 8
 const AUTO_ROTATE_RESUME_MS = 1800
-const MAX_GLOBE_PITCH = THREE.MathUtils.degToRad(75)
+const MAX_GLOBE_PITCH = THREE.MathUtils.degToRad(34)
 const MIN_ZOOM = 2.42
 const MAX_ZOOM = 8.5
 const DOT_SPACING_PX = 7
@@ -305,15 +307,21 @@ export default function Globe({ homeLat, homeLon, contacts }) {
     homeMarker.renderOrder = 2
     globeGroup.add(homeMarker)
 
-    // Longitude and latitude are the only rotation state. Rebuilding the
-    // orientation from these values prevents quaternion/Euler drift, so the
-    // globe can never accumulate roll after repeated drags.
+    // Yaw and pitch are the only rotation state. Pitch is applied last around
+    // the fixed screen-horizontal axis, so an up/down drag stays vertical even
+    // after the globe has been spun horizontally. Rebuilding the quaternion
+    // also prevents roll from accumulating between drags.
     let globeYaw = 0.4
     let globePitch = -0.15
-    globeGroup.rotation.order = 'YXZ'
+    const yawAxis = new THREE.Vector3(0, 1, 0)
+    const pitchAxis = new THREE.Vector3(1, 0, 0)
+    const yawQuaternion = new THREE.Quaternion()
+    const pitchQuaternion = new THREE.Quaternion()
 
     function applyGlobeOrientation() {
-      globeGroup.rotation.set(globePitch, globeYaw, 0, 'YXZ')
+      yawQuaternion.setFromAxisAngle(yawAxis, globeYaw)
+      pitchQuaternion.setFromAxisAngle(pitchAxis, globePitch)
+      globeGroup.quaternion.copy(pitchQuaternion).multiply(yawQuaternion)
     }
 
     applyGlobeOrientation()
@@ -334,7 +342,6 @@ export default function Globe({ homeLat, homeLon, contacts }) {
     controls.update()
 
     const activePointers = new Set()
-    const worldUp = new THREE.Vector3(0, 1, 0)
     let dragPointerId = null
     let dragStartX = 0
     let dragStartY = 0
@@ -373,12 +380,18 @@ export default function Globe({ homeLat, homeLon, contacts }) {
       const deltaX = event.clientX - dragStartX
       const deltaY = event.clientY - dragStartY
 
-      // Horizontal movement follows the pointer freely. Vertical movement is
-      // slightly gentler and has a firm latitude limit, keeping north upright
-      // without making ordinary dragging feel locked down.
+      // Horizontal movement is the primary gesture. Ignore small or mostly
+      // diagonal vertical movement so a normal sideways spin cannot slowly
+      // tip the globe. A deliberate up/down drag still gives a restrained
+      // north/south view without approaching an inverted orientation.
+      const verticalIntent = Math.abs(deltaY) > Math.abs(deltaX) * VERTICAL_INTENT_RATIO
+      const verticalDistance = verticalIntent && Math.abs(deltaY) > VERTICAL_DEAD_ZONE_PX
+        ? deltaY - Math.sign(deltaY) * VERTICAL_DEAD_ZONE_PX
+        : 0
+
       globeYaw = wrapAngle(dragStartYaw + deltaX * DRAG_ROTATE_SPEED)
       globePitch = THREE.MathUtils.clamp(
-        dragStartPitch + deltaY * DRAG_ROTATE_SPEED * VERTICAL_DRAG_RATIO,
+        dragStartPitch + verticalDistance * DRAG_ROTATE_SPEED * VERTICAL_DRAG_RATIO,
         -MAX_GLOBE_PITCH,
         MAX_GLOBE_PITCH
       )
@@ -414,8 +427,8 @@ export default function Globe({ homeLat, homeLon, contacts }) {
 
       if (dragPointerId === null && frameAt - lastInteractionAt > AUTO_ROTATE_RESUME_MS) {
         const autoRotation = AUTO_ROTATE_SPEED * elapsedFrames
-        globeGroup.rotateOnWorldAxis(worldUp, autoRotation)
         globeYaw = wrapAngle(globeYaw + autoRotation)
+        applyGlobeOrientation()
       }
 
       const now = frameAt / 1000
