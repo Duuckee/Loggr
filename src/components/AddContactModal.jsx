@@ -2,6 +2,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { BANDS, MODES, LOCATION_PRESETS } from '../data/parks'
 import ParkSearchInput from './ParkSearchInput'
+import { Contact } from '../domain/models.js'
 import { lookupCallsign } from '../lib/callsign'
 import { findDuplicate, normaliseCallsign, validateContact } from '../lib/validation'
 
@@ -81,7 +82,7 @@ export default function AddContactModal({ contacts, initialContact, experienceMo
     if (Object.keys(nextErrors).length > 0) { setErrors(nextErrors); return }
     const matching = findDuplicate(contacts, candidate, duplicateCooldownMinutes, initialContact?.id)
     if (matching && !allowDuplicate) { setDuplicate(matching); return }
-    onSubmit(candidate)
+    onSubmit(new Contact(candidate).toRecord())
   }
 
   const callsignFields = <>

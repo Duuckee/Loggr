@@ -2,9 +2,10 @@
 import { useMemo, useRef, useState } from 'react'
 import { BANDS, MODES, LOCATION_PRESETS } from '../data/parks'
 import ParkSearchInput from './ParkSearchInput'
+import { Contact } from '../domain/models.js'
 import { lookupCallsign } from '../lib/callsign'
 import { frequencyAfterSubmit } from '../lib/logging'
-import { findDuplicate, normaliseCallsign, validateContact } from '../lib/validation'
+import { errorsForGuidedStep, findDuplicate, normaliseCallsign, validateContact } from '../lib/validation'
 
 // Defaults keep a fresh form useful while still allowing Hunt mode to clear frequency.
 const DEFAULT_FREQUENCIES = { '80m': '3.600', '40m': '7.100', '20m': '14.200', '17m': '18.130', '15m': '21.250', '10m': '28.400', '6m': '52.525', '2m': '146.500' }
@@ -145,18 +146,15 @@ export default function ContactEntryForm({
       setDuplicate(matching)
       return
     }
-    onSubmit(nextCandidate)
-    resetAfterSubmit(nextCandidate.callsign)
+    const contact = new Contact(nextCandidate)
+    onSubmit(contact.toRecord())
+    resetAfterSubmit(contact.callsign)
   }
 
   // Guided mode validates only the fields visible in the current step.
   function handleGuidedNext(event) {
     event?.preventDefault()
-    const nextErrors = validateContact(candidate)
-    const visibleKeys = guidedStep === 0
-      ? ['callsign']
-      : ['band', 'frequency', 'rstSent', 'rstReceived']
-    const visibleErrors = Object.fromEntries(Object.entries(nextErrors).filter(([key]) => visibleKeys.includes(key)))
+    const visibleErrors = errorsForGuidedStep(candidate, guidedStep)
     if (Object.keys(visibleErrors).length > 0) {
       setErrors(visibleErrors)
       return

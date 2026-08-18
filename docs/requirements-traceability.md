@@ -4,13 +4,13 @@ This matrix connects the supplied SRS, context diagram, Level 1 data-flow diagra
 
 | ID | Requirement | Implementation evidence | Verification |
 |---|---|---|---|
-| FR01 | Log date/time, callsign, band, frequency and signal reports | `AddContactModal.jsx`, session contact records | Validation and ADIF tests |
+| FR01 | Log date/time, callsign, band, frequency and signal reports | Inline `ContactEntryForm.jsx`, `Contact` model, session contact records | Validation, domain and ADIF tests |
 | FR02 | Automatically fill UTC date/time | Contact timestamp generated as ISO UTC; dashboard/report render UTC | ADIF test asserts date/time |
 | FR03 | Callsign validation and QRZ/HamQTH lookup | `validation.js`, `callsign.js`, `api/callsign.js`; cached for offline use | Callsign tests; live provider requires configured credentials |
 | FR04 | Duplicate detection with cooldown | `findDuplicate`; configurable whole-session/5/10/30/60-minute window and save override | Duplicate unit test |
 | FR05 | Edit and delete contacts | Dashboard row actions; App immutable update/delete handlers | Manual alpha scenarios A07-A08 |
 | FR06 | Autosave and database upload | `storage.js` saves every active update in an account-scoped store; `sync.js` uses the signed-in Supabase owner and owner-scoped RLS | Storage isolation/migration tests; manual reload/offline check |
-| FR07 | Easy/normal and activator/hunter modes | Session setup and live session controls; guided three-step form | Manual alpha scenario A04 |
+| FR07 | Guided/normal, Hunt/Stay and activator/hunter modes | Session setup and live controls; inline three-step guided form; polymorphic frequency policies | Domain/logging tests and manual alpha scenario A04 |
 | FR08 | ADIF export | `adif.js` includes ADIF/POTA/QSO fields | ADIF unit test |
 | FR09 | Multi-operator support | Multiple aliases/callsigns per session; active operator attributed per contact; report totals | Manual alpha scenario A06 |
 | NFR01 | Usable, attractive UI | High-contrast responsive Modern Globe design, labelled controls, reduced-motion support | Browser/mobile visual check |
@@ -30,6 +30,12 @@ This matrix connects the supplied SRS, context diagram, Level 1 data-flow diagra
 | DFD 4.0 | Dashboard/statistics/reports | Globe dashboard, contact log, live statistics, end-of-session breakdown | Manual alpha scenarios A05/A10 |
 | DFD 5.0 | ADIF export | Browser `.adi` download for manual POTA upload | ADIF unit test |
 | DFD 6.0 | Guided mode | Three clear steps, field-level feedback, beginner tip | Manual alpha scenario A04 |
+| OOP 1 | Classes, objects and constructors | `Contact`, `LoggingSession`, and frequency-policy classes are instantiated in core logging/session flows | Domain tests |
+| OOP 2 | Encapsulation | Private `#record` and `#mode` fields with getters, methods, and defensive record copies | Domain mutation-protection test |
+| OOP 3 | Inheritance and polymorphism | Hunt/Stay subclasses override `nextFrequency`; callers use the shared base interface | Domain and logging tests |
+| DATA 1 | Types, structures and sources | Strings/numbers/booleans; arrays, objects, Set and Map; POTA file, LocalStorage, Supabase, QRZ/HamQTH | Code inspection, storage and API tests |
+| VAL 1 | Required, format, range and existence validation | Callsign/RST formats, frequency/coordinate ranges, required fields, park existence, duplicate detection | Validation tests |
+| DOC 1 | Internal documentation and naming conventions | Module comments, architecture rationale, naming rules, assessment evidence and Gantt annotations | Documentation review |
 
 ## Deliberate boundaries
 

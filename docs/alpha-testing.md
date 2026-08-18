@@ -4,13 +4,23 @@
 
 Run `npm test`, `npm run lint`, and `npm run build`. Record the command output or screenshot with the assessment evidence after each material change.
 
+### Latest recorded run — 18 August 2026
+
+| Check | Result | Notes |
+|---|---|---|
+| `npm test` | Pass | 9 test files passed, including domain/OOP, Guided-step validation, park existence, storage, API, globe and export coverage. |
+| `npm run lint` | Pass | ESLint reported no errors. |
+| `npm run build` | Pass | Vite production build completed successfully with 100 modules transformed. The POTA dataset remains a deliberately separate large chunk. |
+
+This run found and corrected explicit-extension errors in the Node ESM dependency chain and an invalid park fixture (`AU-0001` was replaced with existing park `AU-0002`). These corrections are debugging evidence, not hidden failed attempts.
+
 ## Manual test table
 
 | ID | Test data/action | Expected result | Actual result | Status |
 |---|---|---|---|---|
 | A01 | Search and select an Australian POTA park | Valid park resolves and session can start | To be recorded by student | Pending |
 | A02 | Type an unselected/invalid park reference | Clear validation prevents session start | To be recorded by student | Pending |
-| A03 | Enter invalid callsign `ABC`, 20m frequency `7.100`, SSB RST `599` | Field-specific callsign, frequency and RST errors | Covered by automated validation test | Pass |
+| A03 | Enter invalid callsign `ABC`, 20m frequency `7.100`, SSB RST `599` | Field-specific callsign, frequency and RST errors | Covered by automated validation and Guided-step tests | Pass |
 | A04 | Start Guided mode and add a valid contact | Three steps appear in order; valid contact saves | To be recorded by student | Pending |
 | A05 | Add contact with coordinates and a selected POTA park | Contact appears in log/on globe and P2P arc is shown | To be recorded by student | Pending |
 | A06 | Switch active operator and add contact | Contact/report names the selected operator alias | To be recorded by student | Pending |

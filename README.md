@@ -54,6 +54,8 @@ Youth users should be represented with usernames, callsigns or non-identifying a
 
 ## Project evidence
 
+- `docs/assessment-evidence.md` maps each Lesson 4 OOP, validation and documentation criterion to code and tests.
+- `docs/gantt-progress.md` records Git-backed milestones and ongoing schedule annotations.
 - `docs/requirements-traceability.md` maps the SRS and diagrams to implementation and verification evidence.
 - `docs/alpha-testing.md` records automated and manual alpha checks.
 - `docs/beta-test-plan.md` provides the required real-user testing plan without fabricating results.

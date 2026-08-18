@@ -1,7 +1,7 @@
 // Validation tests cover callsigns, reports, frequencies, and duplicates.
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { findDuplicate, isFrequencyInBand, isValidCallsign, isValidRst, validateContact } from '../src/lib/validation.js'
+import { errorsForGuidedStep, findDuplicate, isFrequencyInBand, isValidCallsign, isValidRst, validateContact } from '../src/lib/validation.js'
 
 test('accepts representative amateur callsigns and rejects malformed input', () => {
   assert.equal(isValidCallsign('VK3ABC'), true)
@@ -22,8 +22,21 @@ test('validates that frequency is inside the selected band', () => {
 })
 
 test('returns field-specific errors for invalid contact data', () => {
-  const errors = validateContact({ callsign: '', band: '20m', frequency: '7.1', mode: 'SSB', rstSent: '599', rstReceived: '59', lat: 91, lon: 0 })
-  assert.deepEqual(Object.keys(errors).sort(), ['callsign', 'frequency', 'lat', 'rstSent'])
+  const errors = validateContact({ callsign: '', band: '20m', frequency: '7.1', mode: 'SSB', rstSent: '599', rstReceived: '59', lat: 91, lon: 0, park: 'AU-DOES-NOT-EXIST' })
+  assert.deepEqual(Object.keys(errors).sort(), ['callsign', 'frequency', 'lat', 'park', 'rstSent'])
+})
+
+test('accepts a park only when it exists in the bundled data source', () => {
+  const base = { callsign: 'VK3ABC', band: '20m', frequency: '14.2', mode: 'SSB', rstSent: '59', rstReceived: '59', lat: '', lon: '' }
+  assert.equal(validateContact({ ...base, park: 'AU-0002' }).park, undefined)
+  assert.match(validateContact({ ...base, park: 'AU-99999' }).park, /existing POTA park/)
+})
+
+test('guided validation reports only errors visible in the current step', () => {
+  const invalid = { callsign: 'ABC', band: '20m', frequency: '7.1', mode: 'SSB', rstSent: '599', rstReceived: '59', lat: 91, lon: 0, park: 'AU-99999' }
+  assert.deepEqual(Object.keys(errorsForGuidedStep(invalid, 0)), ['callsign'])
+  assert.deepEqual(Object.keys(errorsForGuidedStep(invalid, 1)).sort(), ['frequency', 'rstSent'])
+  assert.deepEqual(Object.keys(errorsForGuidedStep(invalid, 2)).sort(), ['lat', 'park'])
 })
 
 test('detects same callsign, band and mode inside cooldown window', () => {

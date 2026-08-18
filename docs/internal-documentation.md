@@ -2,7 +2,16 @@
 
 ## Solution structure
 
-Loggr uses React functional components because the interface is a state-driven browser application. Composition and pure functions are more relevant here than inventing class inheritance: `App` owns session state; screen components receive explicit data and callbacks; pure library modules validate, transform, store, synchronise, and export that data. Three.js objects are used where object-oriented scene graphs are genuinely relevant.
+Loggr combines object-oriented domain code with React functional components. Domain classes own contact/session behavior and frequency policies, while React components remain responsible for rendering and user interaction. `App` owns session state; screen components receive explicit data and callbacks; library modules validate, transform, store, synchronise, and export plain records. Three.js also provides an object-oriented scene graph for the globe.
+
+## Object-oriented design
+
+- **Classes and constructors:** `Contact` and `LoggingSession` constructors turn input records into consistent domain objects. `FrequencyPolicy`, `HuntFrequencyPolicy`, and `StayFrequencyPolicy` construct the frequency-reset strategies.
+- **Objects:** the running app creates class instances whenever contacts are saved or sessions are changed. Classes convert back to plain records for React state, LocalStorage, Supabase, and ADIF export.
+- **Encapsulation:** `Contact`, `LoggingSession`, and `FrequencyPolicy` use JavaScript private `#record`/`#mode` fields. Public getters and methods expose controlled behavior, and `toRecord()` returns copies rather than the private object.
+- **Inheritance:** `HuntFrequencyPolicy` and `StayFrequencyPolicy` extend `FrequencyPolicy` and share its public interface.
+- **Polymorphism:** `frequencyAfterSubmit` retrieves either subclass and calls `nextFrequency()` without conditional reset logic. Hunt clears the frequency; Stay retains it.
+- **Responsibility split:** domain classes manage state transitions, validation functions check user input, and UI components handle presentation. This avoids placing unrelated behavior in one large class.
 
 ## Data types and structures
 
@@ -24,6 +33,8 @@ Loggr uses React functional components because the interface is a state-driven b
 
 ## Main code structures
 
+- `domain/models.js`: encapsulated `Contact` and `LoggingSession` classes used by the live application.
+- `domain/frequencyPolicies.js`: base/subclasses demonstrating inheritance and polymorphic frequency behavior.
 - `validation.js`: pure validation and duplicate-detection functions, kept independent for straightforward alpha testing.
 - `storage.js`: defensive JSON read/write functions; failures return safe fallbacks so storage restrictions cannot crash the UI.
 - `callsign.js` and `api/callsign.js`: cache-first client lookup plus server-side provider fallback.
@@ -31,5 +42,11 @@ Loggr uses React functional components because the interface is a state-driven b
 - `adif.js`: deterministic conversion of internal contact records to ADIF 3.1.4 fields.
 - `Globe.jsx`: lifecycle-managed Three.js scene, markers, arcs, pointer input, rendering loop, and cleanup.
 
-Naming follows JavaScript conventions: PascalCase components, camelCase variables/functions, UPPER_SNAKE_CASE constants, descriptive Boolean `is…` names, and stable lower-case database columns. Comments explain non-obvious intent and trade-offs rather than restating syntax.
+## Naming and commenting conventions
 
+- React components and classes use `PascalCase` (`ContactEntryForm`, `LoggingSession`).
+- Variables, functions, methods, and instances use `camelCase` (`frequencyMode`, `addContact`).
+- Fixed configuration constants use `UPPER_SNAKE_CASE` (`MAX_GLOBE_PITCH`).
+- Boolean values use question-like prefixes such as `is…`, `has…`, or `show…` (`isP2p`).
+- Database columns use stable `lower_snake_case` names (`profile_id`).
+- Modules begin with a short purpose comment. Inline comments explain intent, constraints, and non-obvious algorithms rather than repeating syntax.

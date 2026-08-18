@@ -7,6 +7,7 @@ import AddContactModal from './components/AddContactModal'
 import SessionSummary from './components/SessionSummary'
 import Leaderboard from './components/Leaderboard'
 import ProfilePage from './components/ProfilePage'
+import { LoggingSession } from './domain/models.js'
 import { loadMyProfile, signOut } from './lib/auth'
 import { archiveSession, claimLegacyStorage, clearActiveSession, loadActiveSession, loadSettings, saveActiveSession, saveSettings } from './lib/storage'
 import { supabase, supabaseConfigured } from './lib/supabase'
@@ -116,35 +117,29 @@ function App() {
       frequencyMode: 'hunt',
       contacts: [],
     }
-    setLoggingSession(next)
+    setLoggingSession(new LoggingSession(next).toRecord())
     setScreen('dashboard')
   }
 
   function addContact(contact) {
-    setLoggingSession((previous) => ({ ...previous, contacts: [...previous.contacts, contact] }))
+    setLoggingSession((previous) => new LoggingSession(previous).addContact(contact))
   }
 
   function updateContact(contact) {
-    setLoggingSession((previous) => ({
-      ...previous,
-      contacts: previous.contacts.map((item) => (item.id === contact.id ? contact : item)),
-    }))
+    setLoggingSession((previous) => new LoggingSession(previous).updateContact(contact))
     setEditingContact(null)
   }
 
   function deleteContact(id) {
-    setLoggingSession((previous) => ({
-      ...previous,
-      contacts: previous.contacts.filter((contact) => contact.id !== id),
-    }))
+    setLoggingSession((previous) => new LoggingSession(previous).removeContact(id))
   }
 
   function updateSession(patch) {
-    setLoggingSession((previous) => ({ ...previous, ...patch }))
+    setLoggingSession((previous) => new LoggingSession(previous).withChanges(patch))
   }
 
   function endSession() {
-    const ended = { ...loggingSession, endTime: new Date().toISOString(), status: 'ended' }
+    const ended = new LoggingSession(loggingSession).complete()
     setLoggingSession(ended)
     archiveSession(ended, authSession.user.id)
     clearActiveSession(authSession.user.id)

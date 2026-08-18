@@ -1,5 +1,5 @@
 // Park helpers expose searchable records and common radio-field presets.
-import { POTA_AU } from './pota-au'
+import { POTA_AU } from './pota-au.js'
 
 // Real POTA park references, loaded from the Australia (AU) CSV export.
 // Format per row: [reference, name, latitude, longitude, locationDesc]

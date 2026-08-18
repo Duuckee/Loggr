@@ -1,4 +1,6 @@
 // Shared validation protects contact entry across inline and editing forms.
+import { lookupPark } from '../data/parks.js'
+
 export const BAND_FREQUENCY_RANGES = {
   '80m': [3.5, 4],
   '40m': [7, 7.3],
@@ -54,7 +56,21 @@ export function validateContact(contact) {
   if (contact.lon !== '' && (Number(contact.lon) < -180 || Number(contact.lon) > 180)) {
     errors.lon = 'Longitude must be between -180 and 180.'
   }
+  if (contact.park && !lookupPark(contact.park)) {
+    errors.park = 'Select an existing POTA park from the search results.'
+  }
   return errors
+}
+
+export function errorsForGuidedStep(contact, step) {
+  // Only block Continue for fields the operator can currently see and fix.
+  const stepFields = {
+    0: ['callsign'],
+    1: ['band', 'frequency', 'rstSent', 'rstReceived'],
+    2: ['park', 'lat', 'lon'],
+  }
+  const visibleFields = stepFields[step] || []
+  return Object.fromEntries(Object.entries(validateContact(contact)).filter(([field]) => visibleFields.includes(field)))
 }
 
 export function findDuplicate(contacts, candidate, cooldownMinutes, ignoredId = null) {
