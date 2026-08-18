@@ -1,3 +1,4 @@
+// Searchable park input provides keyboard-friendly suggestions from local data.
 import { useState, useRef, useEffect } from 'react'
 import { searchParks } from '../data/parks'
 

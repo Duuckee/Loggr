@@ -1,3 +1,4 @@
+// Supabase is optional at build time so the local-first UI can still load.
 import { createClient } from '@supabase/supabase-js'
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL

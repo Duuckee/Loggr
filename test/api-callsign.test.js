@@ -1,3 +1,4 @@
+// API tests exercise callsign-provider parsing and fallback behavior.
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import handler from '../api/callsign.js'
@@ -26,4 +27,3 @@ test('callsign API reports missing provider configuration safely', async () => {
   assert.equal(response.statusCode, 503)
   assert.match(response.body.error, /Configure QRZ or HamQTH/)
 })
-

@@ -1,3 +1,4 @@
+// Completed-session report summarizes contacts and supports ADIF export.
 import { useMemo } from 'react'
 import AppNavigation from './AppNavigation'
 import { downloadAdif } from '../lib/adif'

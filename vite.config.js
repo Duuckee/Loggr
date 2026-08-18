@@ -1,3 +1,4 @@
+// Vite build settings split large libraries into stable cacheable chunks.
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 

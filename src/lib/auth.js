@@ -1,3 +1,4 @@
+// Authentication helpers wrap Supabase accounts, profiles, groups, and rankings.
 import { supabase, supabaseConfigured } from './supabase'
 import { normalizeUsername, usernameToAuthEmail, validatePassword, validateUsername } from './identity'
 

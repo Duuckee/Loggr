@@ -1,3 +1,4 @@
+// Root application state coordinates authentication, sessions, sync, and navigation.
 import { useCallback, useEffect, useState } from 'react'
 import AuthLanding from './components/AuthLanding'
 import SessionSetup from './components/SessionSetup'

@@ -1,3 +1,4 @@
+// Browser entry point mounts React and enables the production service worker.
 import React from 'react'
 import ReactDOM from 'react-dom/client'
 import App from './App.jsx'

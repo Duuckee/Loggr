@@ -1,3 +1,4 @@
+// Live session dashboard combines the globe, inline logger, and recent QSOs.
 import { useEffect, useMemo, useState } from 'react'
 import Globe from './Globe'
 import ContactEntryForm from './ContactEntryForm'

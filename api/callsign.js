@@ -1,3 +1,4 @@
+// Serverless callsign lookup proxy with QRZ primary and HamDB fallback providers.
 const QRZ_LOGIN_URL = 'https://xmldata.qrz.com/xml/current/'
 const HAMQTH_URL = 'https://www.hamqth.com/xml.php'
 
@@ -57,4 +58,3 @@ export default async function handler(request, response) {
     return response.status(502).json({ error: 'The callsign provider could not be reached.' })
   }
 }
-

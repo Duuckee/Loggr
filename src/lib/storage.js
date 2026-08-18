@@ -1,3 +1,4 @@
+// Local storage keeps active sessions safe offline and scoped to their owner.
 const LEGACY_ACTIVE_SESSION_KEY = 'loggr.active-session.v2'
 const LEGACY_ARCHIVED_SESSIONS_KEY = 'loggr.archived-sessions.v2'
 const ACTIVE_SESSION_KEY = 'loggr.active-session.v3'

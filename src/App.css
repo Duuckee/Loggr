@@ -1187,6 +1187,28 @@
   line-height: 1.45;
 }
 
+/* Guided mode keeps the same inline footprint while revealing one task at a time. */
+.composer-progress {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.45rem;
+  margin-bottom: 0.9rem;
+}
+.composer-progress span { padding: 0.55rem 0; color: var(--text-faint); border-top: 2px solid var(--border); font: 0.58rem/1 var(--mono); letter-spacing: 0.05em; text-transform: uppercase; }
+.composer-progress span.active { color: var(--accent); border-color: var(--accent); }
+.guided-step { min-height: 178px; }
+.guided-step .guided-copy h3 { margin-top: 0.45rem; }
+.guided-step .guided-copy p { margin-bottom: 0.8rem; }
+.guided-step > .callsign-field { max-width: 520px; }
+.guided-signal-grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 0.55rem; }
+.guided-signal-grid .field { margin-bottom: 0; }
+.guided-signal-grid .field label { min-height: 13px; font-size: 0.58rem; }
+.guided-signal-grid .field input,
+.guided-signal-grid .field select { min-height: 42px; padding: 0.63rem 0.65rem; font-size: 0.72rem; }
+.guided-location-grid { margin-top: 0; padding-top: 0; border-top: 0; }
+.guided-entry-actions { display: flex; justify-content: flex-end; gap: 0.55rem; margin-top: 0.8rem; padding-top: 0.75rem; border-top: 1px solid var(--border); }
+.guided-entry-actions .btn-primary { width: auto; min-width: 126px; gap: 1rem; }
+
 .quick-entry-grid {
   display: grid;
   grid-template-columns: minmax(190px, 1.8fr) minmax(72px, 0.58fr) minmax(104px, 0.8fr) minmax(82px, 0.62fr) auto;
@@ -1254,6 +1276,8 @@
   .quick-entry-grid .callsign-field { grid-column: 1 / -1; }
   .composer-submit { align-self: end; width: 100%; }
   .entry-details-grid { grid-template-columns: 1fr; }
+  .guided-signal-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .guided-signal-grid .frequency-field { grid-column: auto; }
 }
 
 @media (max-width: 480px) {

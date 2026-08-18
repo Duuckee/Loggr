@@ -1,3 +1,4 @@
+// ADIF tests verify standards-friendly export fields and values.
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { buildAdif } from '../src/lib/adif.js'
@@ -11,4 +12,3 @@ test('exports required ADIF and POTA fields', () => {
     assert.match(output, new RegExp(expected.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')))
   }
 })
-

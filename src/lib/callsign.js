@@ -1,3 +1,4 @@
+// Browser callsign lookup validates input before calling the serverless proxy.
 import { isValidCallsign, normaliseCallsign } from './validation'
 
 const CACHE_KEY = 'loggr.callsign-cache.v1'
@@ -45,4 +46,3 @@ export async function lookupCallsign(callsign) {
   writeCache(cache)
   return { ...body, cached: false }
 }
-

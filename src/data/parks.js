@@ -1,3 +1,4 @@
+// Park helpers expose searchable records and common radio-field presets.
 import { POTA_AU } from './pota-au'
 
 // Real POTA park references, loaded from the Australia (AU) CSV export.

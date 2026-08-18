@@ -1,3 +1,4 @@
+// Profile management covers identity, privacy, groups, and password updates.
 import { useCallback, useEffect, useState } from 'react'
 import AppNavigation from './AppNavigation'
 import { changePassword, createGroup, joinGroup, leaveGroup, loadGroupMembers, loadMyGroup, loadMyProfile, removeGroupMember, updateMyProfile } from '../lib/auth'

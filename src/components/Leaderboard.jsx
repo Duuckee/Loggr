@@ -1,3 +1,4 @@
+// Public and authenticated leaderboard views share the same ranked results.
 import { useEffect, useState } from 'react'
 import AppNavigation from './AppNavigation'
 import { fetchLeaderboard } from '../lib/auth'

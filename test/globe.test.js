@@ -1,3 +1,4 @@
+// Globe tests protect map geometry, rotation, markers, and P2P links.
 import assert from 'node:assert/strict'
 import { readFile } from 'node:fs/promises'
 import test from 'node:test'

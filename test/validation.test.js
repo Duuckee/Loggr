@@ -1,3 +1,4 @@
+// Validation tests cover callsigns, reports, frequencies, and duplicates.
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { findDuplicate, isFrequencyInBand, isValidCallsign, isValidRst, validateContact } from '../src/lib/validation.js'
@@ -31,4 +32,3 @@ test('detects same callsign, band and mode inside cooldown window', () => {
   assert.equal(findDuplicate(existing, candidate, 10)?.id, '1')
   assert.equal(findDuplicate(existing, candidate, 2), null)
 })
-

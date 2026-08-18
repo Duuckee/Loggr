@@ -1,3 +1,4 @@
+// Public landing screen handles sign-in, registration, and product orientation.
 import { useState } from 'react'
 import { PARK_COUNT } from '../data/parks'
 import { signInWithUsername, signUpWithUsername } from '../lib/auth'

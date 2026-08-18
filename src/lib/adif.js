@@ -1,3 +1,4 @@
+// ADIF helpers serialize completed contacts for external logging services.
 function field(name, value) {
   const str = String(value ?? '')
   return `<${name}:${str.length}>${str}`

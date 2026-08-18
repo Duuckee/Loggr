@@ -1,3 +1,4 @@
+// Shared account navigation keeps authenticated screens consistent.
 import { initialsForProfile } from '../lib/identity'
 
 export default function AppNavigation({ profile, active, onNavigate, onSignOut, compact = false }) {

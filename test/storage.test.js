@@ -1,3 +1,4 @@
+// Storage tests protect owner scoping and legacy-session migration.
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { archiveSession, claimLegacyStorage, clearActiveSession, loadActiveSession, loadArchivedSessions, loadSettings, saveActiveSession, saveSettings } from '../src/lib/storage.js'

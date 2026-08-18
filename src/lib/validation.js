@@ -1,3 +1,4 @@
+// Shared validation protects contact entry across inline and editing forms.
 export const BAND_FREQUENCY_RANGES = {
   '80m': [3.5, 4],
   '40m': [7, 7.3],
@@ -68,4 +69,3 @@ export function findDuplicate(contacts, candidate, cooldownMinutes, ignoredId = 
     return Math.abs(timestamp - new Date(contact.timestamp).getTime()) <= windowMs
   }) || null
 }
-

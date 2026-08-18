@@ -1,3 +1,4 @@
+// The service worker caches the app shell for offline field use.
 const CACHE_NAME = 'loggr-app-v5'
 const APP_SHELL = ['/', '/index.html', '/manifest.webmanifest']
 

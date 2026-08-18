@@ -1,3 +1,4 @@
+// Schema tests guard account, group, and leaderboard database contracts.
 import assert from 'node:assert/strict'
 import { readFile } from 'node:fs/promises'
 import test from 'node:test'

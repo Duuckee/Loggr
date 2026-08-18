@@ -1,3 +1,4 @@
+// Existing contacts are edited in this full-detail modal form.
 import { useEffect, useMemo, useState } from 'react'
 import { BANDS, MODES, LOCATION_PRESETS } from '../data/parks'
 import ParkSearchInput from './ParkSearchInput'

@@ -1,3 +1,4 @@
+// Identity tests cover normalized usernames and safe initials.
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { normalizeUsername, passwordByteLength, usernameToAuthEmail, validatePassword, validateUsername } from '../src/lib/identity.js'

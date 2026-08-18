@@ -1,3 +1,4 @@
+// Logging tests pin Hunt and Stay frequency reset behavior.
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { frequencyAfterSubmit } from '../src/lib/logging.js'

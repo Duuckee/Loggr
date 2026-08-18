@@ -1,3 +1,4 @@
+// Sync converts local session objects into the relational Supabase shape.
 import { supabase, supabaseConfigured } from './supabase'
 
 export async function syncSession(session) {

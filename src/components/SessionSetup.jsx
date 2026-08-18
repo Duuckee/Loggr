@@ -1,3 +1,4 @@
+// Session setup captures the park, operators, role, and preferred entry mode.
 import { useState } from 'react'
 import AppNavigation from './AppNavigation'
 import ParkSearchInput from './ParkSearchInput'
