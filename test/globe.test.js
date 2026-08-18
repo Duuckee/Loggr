@@ -28,11 +28,13 @@ test('globe geometry keeps Fiji local instead of creating an antimeridian band',
   assert.ok(fijiPoints > 0)
 })
 
-test('globe rotation uses the sphere centre instead of the zoom-shifted camera target', async () => {
+test('globe rotation is rebuilt around the sphere centre without drag-intent snapping', async () => {
   const source = await readFile(new URL('../src/components/Globe.jsx', import.meta.url), 'utf8')
 
   assert.match(source, /controls\.enableRotate = false/)
-  assert.match(source, /globeGroup\.rotateOnWorldAxis\(worldUp,/)
+  assert.match(source, /globeGroup\.quaternion\.copy\(pitchQuaternion\)\.multiply\(yawQuaternion\)/)
+  assert.match(source, /dragStartPitch \+ deltaY \* DRAG_ROTATE_SPEED \* VERTICAL_DRAG_RATIO/)
+  assert.doesNotMatch(source, /VERTICAL_INTENT_RATIO|VERTICAL_DEAD_ZONE_PX/)
   assert.doesNotMatch(source, /controls\.autoRotate = true/)
 })
 

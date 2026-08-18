@@ -5,11 +5,9 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 const GLOBE_RADIUS = 2
 const AUTO_ROTATE_SPEED = 0.00035
 const DRAG_ROTATE_SPEED = 0.0042
-const VERTICAL_DRAG_RATIO = 0.2
-const VERTICAL_INTENT_RATIO = 0.72
-const VERTICAL_DEAD_ZONE_PX = 8
+const VERTICAL_DRAG_RATIO = 0.68
 const AUTO_ROTATE_RESUME_MS = 1800
-const MAX_GLOBE_PITCH = THREE.MathUtils.degToRad(34)
+const MAX_GLOBE_PITCH = THREE.MathUtils.degToRad(78)
 const MIN_ZOOM = 2.42
 const MAX_ZOOM = 8.5
 const DOT_SPACING_PX = 7
@@ -380,18 +378,13 @@ export default function Globe({ homeLat, homeLon, contacts }) {
       const deltaX = event.clientX - dragStartX
       const deltaY = event.clientY - dragStartY
 
-      // Horizontal movement is the primary gesture. Ignore small or mostly
-      // diagonal vertical movement so a normal sideways spin cannot slowly
-      // tip the globe. A deliberate up/down drag still gives a restrained
-      // north/south view without approaching an inverted orientation.
-      const verticalIntent = Math.abs(deltaY) > Math.abs(deltaX) * VERTICAL_INTENT_RATIO
-      const verticalDistance = verticalIntent && Math.abs(deltaY) > VERTICAL_DEAD_ZONE_PX
-        ? deltaY - Math.sign(deltaY) * VERTICAL_DEAD_ZONE_PX
-        : 0
-
+      // Track both axes continuously. Gating vertical movement based on the
+      // overall drag angle made pitch snap back to its starting value whenever
+      // a diagonal gesture crossed the intent threshold. The pitch clamp keeps
+      // north upright while still allowing a useful view of either pole.
       globeYaw = wrapAngle(dragStartYaw + deltaX * DRAG_ROTATE_SPEED)
       globePitch = THREE.MathUtils.clamp(
-        dragStartPitch + verticalDistance * DRAG_ROTATE_SPEED * VERTICAL_DRAG_RATIO,
+        dragStartPitch + deltaY * DRAG_ROTATE_SPEED * VERTICAL_DRAG_RATIO,
         -MAX_GLOBE_PITCH,
         MAX_GLOBE_PITCH
       )

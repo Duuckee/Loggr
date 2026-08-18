@@ -4,6 +4,6 @@
   "description": "Offline-ready amateur radio contact logging for activators, hunters, and supervised youth operators.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#060908",
-  "theme_color": "#060908"
+  "background_color": "#07111f",
+  "theme_color": "#07111f"
 }

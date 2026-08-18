@@ -44,9 +44,14 @@ export default function AuthLanding({ onAuthenticated, onViewLeaderboard }) {
 
       <main className="auth-hero" id="top">
         <section className="auth-hero-copy">
-          <div className="eyebrow"><span className="status-pulse" /> Your contacts, connected</div>
-          <h1>Log every QSO.<br /><span>Climb the board.</span></h1>
-          <p>Fast field logging, a live 3D contact map, team groups and a leaderboard built around the QSOs you actually record.</p>
+          <div className="eyebrow"><span className="status-pulse" /> Field logging, tuned in</div>
+          <h1>Every contact.<br /><span>One clear signal.</span></h1>
+          <p>A focused field logger with a live 3D contact map, team groups, and a leaderboard built around the QSOs you actually record.</p>
+          <div className="signal-strip" aria-hidden="true">
+            <span className="signal-frequency">144.800</span>
+            <span className="signal-wave" />
+            <span className="signal-unit">MHz · CQ</span>
+          </div>
           <div className="auth-proof" aria-label="Loggr capabilities">
             <div><strong>{PARK_COUNT.toLocaleString()}</strong><span>Australian parks</span></div>
             <div><strong>Offline</strong><span>Local-first logging</span></div>
