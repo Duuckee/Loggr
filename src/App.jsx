@@ -28,7 +28,6 @@ function App() {
   const [loggingSession, setLoggingSession] = useState(null)
   const [screen, setScreen] = useState('setup')
   const [editingContact, setEditingContact] = useState(null)
-  const [showAddContact, setShowAddContact] = useState(false)
   const [online, setOnline] = useState(() => navigator.onLine)
   const [syncState, setSyncState] = useState({ status: 'local', message: 'Saved on this device' })
   const [settings, setSettings] = useState(() => loadSettings())
@@ -113,6 +112,7 @@ function App() {
       startTime: new Date().toISOString(),
       endTime: null,
       status: 'active',
+      frequencyMode: 'hunt',
       contacts: [],
     }
     setLoggingSession(next)
@@ -121,7 +121,6 @@ function App() {
 
   function addContact(contact) {
     setLoggingSession((previous) => ({ ...previous, contacts: [...previous.contacts, contact] }))
-    setShowAddContact(false)
   }
 
   function updateContact(contact) {
@@ -193,7 +192,7 @@ function App() {
         syncState={syncState}
         duplicateCooldownMinutes={settings.duplicateCooldownMinutes}
         onDuplicateCooldownChange={(value) => setSettings({ ...settings, duplicateCooldownMinutes: value })}
-        onAddContact={() => setShowAddContact(true)}
+        onAddContact={addContact}
         onEditContact={setEditingContact}
         onDeleteContact={deleteContact}
         onUpdateSession={updateSession}
@@ -201,7 +200,7 @@ function App() {
         onNavigate={navigate}
         onSignOut={handleSignOut}
       />
-      {(showAddContact || editingContact) && (
+      {editingContact && (
         <AddContactModal
           contacts={loggingSession.contacts}
           initialContact={editingContact}
@@ -210,10 +209,9 @@ function App() {
           sessionId={loggingSession.id}
           duplicateCooldownMinutes={settings.duplicateCooldownMinutes}
           onClose={() => {
-            setShowAddContact(false)
             setEditingContact(null)
           }}
-          onSubmit={editingContact ? updateContact : addContact}
+          onSubmit={updateContact}
         />
       )}
     </>

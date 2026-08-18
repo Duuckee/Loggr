@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import Globe from './Globe'
+import ContactEntryForm from './ContactEntryForm'
 
 function formatUtc(date) {
   return date.toISOString().slice(11, 19)
@@ -44,6 +45,12 @@ export default function Dashboard({
     }
   }, [session.contacts])
 
+  function focusContactEntry() {
+    const input = document.getElementById('contact-callsign')
+    input?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    window.setTimeout(() => input?.focus(), 250)
+  }
+
   return (
     <div className="dashboard">
       <header className="app-header">
@@ -67,7 +74,7 @@ export default function Dashboard({
             <button type="button" onClick={() => onNavigate('profile')}>@{profile.username}</button>
             <button type="button" onClick={onSignOut}>Sign out</button>
           </div>
-          <button className="btn-accent" onClick={onAddContact}><span aria-hidden="true">＋</span> Log contact</button>
+          <button className="btn-accent" onClick={focusContactEntry}><span aria-hidden="true">↓</span> Quick entry</button>
         </div>
       </header>
 
@@ -94,7 +101,7 @@ export default function Dashboard({
           </div>
         </section>
 
-        <aside className="sidebar">
+        <aside className="sidebar workspace-pane">
           <div className="sidebar-header">
             <div><span className="panel-kicker">Session workspace</span><h2>Contact log</h2></div>
             <span className={`save-state ${syncState.status}`}><span className="mini-dot" /> {syncState.message}</span>
@@ -115,13 +122,6 @@ export default function Dashboard({
               </select>
             </label>
             <label>
-              <span>Role</span>
-              <select value={session.operatingRole} onChange={(event) => onUpdateSession({ operatingRole: event.target.value })}>
-                <option value="activator">Activator</option>
-                <option value="hunter">Hunter</option>
-              </select>
-            </label>
-            <label>
               <span>Duplicates</span>
               <select value={duplicateCooldownMinutes} onChange={(event) => onDuplicateCooldownChange(Number(event.target.value))}>
                 <option value="0">Whole session</option>
@@ -131,17 +131,29 @@ export default function Dashboard({
                 <option value="60">60 minutes</option>
               </select>
             </label>
+            <label>
+              <span>Operating role</span>
+              <select value={session.operatingRole} onChange={(event) => onUpdateSession({ operatingRole: event.target.value })}>
+                <option value="activator">Activator</option>
+                <option value="hunter">Hunter</option>
+              </select>
+            </label>
           </div>
 
-          {session.experienceMode === 'guided' && (
-            <div className="guided-tip" role="status">
-              <span className="tip-icon" aria-hidden="true">→</span><div><strong>Ready for your next QSO?</strong><span>Listen for a callsign, then choose <em>Log contact</em>. Each field will be explained as you go.</span></div>
-            </div>
-          )}
+          <ContactEntryForm
+            contacts={session.contacts}
+            experienceMode={session.experienceMode}
+            frequencyMode={session.frequencyMode || 'hunt'}
+            operator={session.activeOperator}
+            sessionId={session.id}
+            duplicateCooldownMinutes={duplicateCooldownMinutes}
+            onFrequencyModeChange={(frequencyMode) => onUpdateSession({ frequencyMode })}
+            onSubmit={onAddContact}
+          />
 
           <div className="log-header"><span>Recent contacts</span><span>{stats.total} total</span></div>
           <div className="contact-log">
-            {session.contacts.length === 0 && <div className="empty-log"><div className="empty-log-mark" aria-hidden="true">CQ</div><strong>Your log is ready</strong><span>Your contacts will appear here and on the globe as you add them.</span><button className="btn-primary" onClick={onAddContact}>Log first contact <span aria-hidden="true">→</span></button></div>}
+            {session.contacts.length === 0 && <div className="empty-log compact"><div className="empty-log-mark" aria-hidden="true">CQ</div><strong>Your log is ready</strong><span>Add the first contact using quick entry above.</span></div>}
             {[...session.contacts].reverse().map((contact) => (
               <article className="contact-row" key={contact.id}>
                 <div className="contact-row-top">
