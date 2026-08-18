@@ -1,3 +1,4 @@
+/* Global design tokens, resets, and accessibility defaults. */
 :root {
   --bg: #06100c;
   --bg-soft: #091711;
